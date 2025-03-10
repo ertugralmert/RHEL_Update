@@ -1,4 +1,3 @@
-# English update
 
 # RHEL Major Version Upgrade Guide: 7 → 8 → 9
 
