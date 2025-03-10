@@ -1960,15 +1960,5 @@ tar -czvf /mnt/backup/etc_backup.tar.gz /etctar -czvf /mnt/backup/home_backup.ta
 ```
 
       - Test backups for recoverability before upgrading
-   1. **Testing**:
-      - Test upgrades in a non-production environment first
-      - Document any issues encountered and their solutions
-   1. **Post-Upgrade Verification**:
-      - Thoroughly test system functionality
-      - Verify all critical services are running
-      - Ensure security configurations are properly applied
-   1. **Documentation**:
-      - Document all changes made during the upgrade process
-      - Keep records of pre-upgrade and post-upgrade states
-      - Note any customizations that needed to be reapplied
+ 
 
