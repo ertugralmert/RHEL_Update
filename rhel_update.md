@@ -10,30 +10,6 @@ This guide provides comprehensive instructions for upgrading Red Hat Enterprise 
 [Documentation_RHEL7_to_RHEL8](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/8/html-single/upgrading_from_rhel_7_to_rhel_8/index#idm140321908504688)  
 [Documentation_RHEL8_to_RHEL9](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html-single/upgrading_from_rhel_8_to_rhel_9/index#idm140617907380960)
 
-## Table of Contents
-
-- [Introduction](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#introduction)
-- [Preliminary Information](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#preliminary-information)
-   - [Minor Version Updates vs. Major Upgrades](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#minor-version-updates-vs-major-upgrades)
-   - [Key Migration Terminology](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#key-migration-terminology)
-- [Part 1: RHEL 7 to RHEL 8 Upgrade](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#part-1-rhel-7-to-rhel-8-upgrade)
-   - [Planning and Prerequisites](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#planning-and-prerequisites)
-   - [Preparation](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#preparation)
-   - [Pre-upgrade Assessment](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#pre-upgrade-assessment)
-   - [Performing the Upgrade](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#performing-the-upgrade)
-   - [Post-upgrade Tasks](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#post-upgrade-tasks)
-- [Part 2: RHEL 8 to RHEL 9 Upgrade](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#part-2-rhel-8-to-rhel-9-upgrade)
-   - [Planning and Prerequisites](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#planning-and-prerequisites-1)
-   - [Preparation](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#preparation-1)
-   - [Pre-upgrade Assessment](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#pre-upgrade-assessment-1)
-   - [Performing the Upgrade](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#performing-the-upgrade-1)
-   - [Post-upgrade Tasks](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#post-upgrade-tasks-1)
-- [Troubleshooting](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#troubleshooting)
-   - [Common Issues with RHEL 7 to RHEL 8 Upgrades](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#common-issues-with-rhel-7-to-rhel-8-upgrades)
-   - [Common Issues with RHEL 8 to RHEL 9 Upgrades](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#common-issues-with-rhel-8-to-rhel-9-upgrades)
-- [Special Considerations](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#special-considerations)
-- [Best Practices](https://claude.ai/chat/d8da7968-9d03-423b-b659-20977689fccf#best-practices)
-
 ## Introduction
 
 Red Hat Enterprise Linux provides an in-place upgrade path between major versions using the Leapp utility. This allows you to upgrade your operating system while preserving installed applications, configurations, and data. This document covers the complete process for upgrading from RHEL 7 to RHEL 8, and then from RHEL 8 to RHEL 9.
