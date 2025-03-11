@@ -1326,5 +1326,12 @@ During the upgrade process, we encountered and resolved the following issues:
 
 9. **Post-Upgrade Validations**
    - Verified OS version, kernel, subscription, cleaned old packages, updated rescue kernel, and ensured SELinux is enforcing.
+
+---
+<div align="center">
+  <p><strong>Designed & Documented by Mert Ugral</strong></p>
+  <p>© 2025 Mertugral. All rights reserved.</p>
+  <p><a href="https://github.com/ertugralmert">GitHub</a> | <a href="https://linkedin.com/in/mertertugral">LinkedIn</a></p>
+</div>
  
 
