@@ -973,6 +973,356 @@ tar -czvf /mnt/backup/etc_backup.tar.gz /etctar -czvf /mnt/backup/home_backup.ta
 ```
 
    - Test backups for recoverability before upgrading
+---
+# RHEL Major Version Upgrade – Issues, Commands, and Solutions
 
+This document outlines the issues we faced during the in‐place upgrade (RHEL 7 → 8 → 9), along with the commands and solutions used to resolve them.
+
+## 1. Issue: Kernel Driver pata_acpi Is Loaded in RHEL 7 but Removed in RHEL 8
+
+### Problem
+Leapp's rpm_scanner reported:
+
+> "Detected loaded kernel drivers which have been removed in RHEL 8. Upgrade cannot proceed."
+
+This is due to the pata_acpi module still being loaded on the system even though it is not supported in RHEL 8.
+
+### Commands and Solutions
+
+**Remove the Module (Temporary)**
+```bash
+modprobe -r pata_acpi
+```
+Note: This command may not force removal if the module is in use.
+
+**Blacklist the Module (Permanent)**
+```bash
+echo "blacklist pata_acpi" >> /etc/modprobe.d/blacklist.conf
+```
+
+**Update initramfs**
+```bash
+dracut -f
+```
+
+**Reboot the System**
+```bash
+reboot
+```
+
+**Verify Module Removal**
+```bash
+lsmod | grep pata_acpi
+```
+No output means the module is no longer loaded.
+
+## 2. Issue: SSH Root Login Warning
+
+### Problem
+Leapp reports warnings related to remote login using the root account due to the default RHEL 8 SSH configuration (PermitRootLogin prohibit-password).
+
+### Commands and Solutions
+If you require root login with a password in RHEL 8:
+
+**Edit the SSH Configuration**
+```bash
+vi /etc/ssh/sshd_config
+```
+
+Change or add the line:
+```
+PermitRootLogin yes
+```
+
+**Restart the SSH Service**
+```bash
+systemctl restart sshd
+```
+
+Alternatively, if you do not require root login via password, you may simply answer the Leapp question in the answer file (or via the leapp answer command) to acknowledge that this risk is accepted.
+
+## 3. Issue: Malformed RPM Metadata Causing "ValueError: too many values to unpack"
+
+### Problem
+Leapp's rpmscanner fails when parsing an RPM package that has extra pipe (|) characters in its metadata (e.g., in the Packager or Release fields).
+Error Message:
+
+> "ValueError: too many values to unpack"
+
+This was observed in the gpg-pubkey packages.
+
+### Commands and Solutions
+
+**Identify the Problematic Package(s)**
+```bash
+for pkg in $(rpm -qa); do
+  out=$(rpm -q --qf '%{NAME}|%{VERSION}|%{RELEASE}|%{EPOCH}|%{PACKAGER}|%{ARCH}|%{SIGPGP:pgpsig}\n' "$pkg")
+  fields=$(echo "$out" | awk -F'|' '{print NF}')
+  if [ "$fields" -ne 7 ]; then
+    echo "Problematic package: $pkg"
+    echo "Metadata: $out"
+    echo "----"
+  fi
+done
+```
+
+This script checks each installed package to ensure the metadata splits into exactly 7 fields.
+
+**Remove the Problematic Package**
+For example, if the output shows:
+```
+gpg-pubkey-477dea46-5e67f953
+```
+
+Remove it with:
+```bash
+rpm -e gpg-pubkey-477dea46-5e67f953
+```
+
+Or using yum:
+```bash
+yum remove gpg-pubkey-477dea46-5e67f953
+```
+
+Note: If yum does not remove it because it is not treated as a "normal" package, use rpm directly.
+
+## 4. Issue: SHA-1 Signed Packages
+
+### Problem
+RHEL 9 does not support SHA-1 signed packages. The Leapp preupgrade/upgrade process reported SHA-1 issues for packages such as dscsys1 and dsesame.
+
+### Commands and Solutions
+
+**Verify if SHA-1 Signed Packages Exist**
+```bash
+rpm -qa --qf '%{NAME}-%{VERSION}-%{RELEASE} %{SIGPGP:pgpsig}\n' | grep 'SHA1'
+```
+
+If output shows packages with SHA1, they must be addressed.
+
+**Solution Options:**
+
+1. **Remove the Packages:**
+```bash
+yum remove dscsys1 dsesame
+```
+
+2. **Replace with Updated Versions:**
+Contact the vendor or check if updated (SHA-256 signed) versions are available and install those.
+
+3. **Bypassing SHA-1 Check:**
+There is no supported method to simply bypass the SHA-1 check via leapp answer. The proper resolution is to remove or update these packages.
+
+## 5. Issue: Read-Only Filesystem Error in /var/lib/leapp
+
+### Problem
+Leapp reports an error such as:
+
+> "Failed to create directory ... read-only file system"
+
+This indicates that Leapp's scratch directory is mounted as read-only.
+
+### Commands and Solutions
+
+**Check Mount Status**
+```bash
+mount | grep /var/lib/leapp
+df -h /var/lib/leapp
+```
+Look for ro (read-only) in the output.
+
+**Remount as Read-Write**
+```bash
+mount -o remount,rw /var/lib/leapp
+```
+Or adjust the /etc/fstab entry accordingly.
+
+**Ensure Sufficient Disk Space**
+```bash
+df -h /var/lib/leapp
+```
+At least 4-5 GB should be free.
+
+**Check and Restore SELinux Contexts (if applicable)**
+```bash
+restorecon -Rv /var/lib/leapp
+```
+
+## 6. Issue: OverlayFS/XFS ftype=0 Issue – Using LEAPP_OVL_IMG_FS_EXT4
+
+### Problem
+On some systems, OverlayFS used by Leapp conflicts with XFS filesystems (especially if XFS was created with ftype=0). This can result in "read-only" errors during upgrade.
+
+### Commands and Solutions
+
+**Set Environment Variable to Force ext4 Overlay**
+```bash
+export LEAPP_OVL_IMG_FS_EXT4=1
+```
+This forces Leapp to use an ext4-formatted overlay image instead of one based on XFS.
+
+**Run the Preupgrade Again**
+```bash
+leapp preupgrade --target 8.10
+```
+Then proceed with the upgrade if the error is resolved.
+
+## 7. Issue: "Excluded by module filtering" Error
+
+### Problem
+When installing Leapp-related packages (or other packages), DNF may report "excluded by module filtering" because a module stream is filtering out the package.
+
+### Commands and Solutions
+
+**List Active Modules**
+```bash
+dnf module list
+```
+
+**Reset/Disable Conflicting Modules (Example for Python39)**
+```bash
+dnf module reset python39
+dnf module disable python39
+```
+Repeat for any module that might be causing the filtering issue.
+
+**Clean and Retry Package Installation**
+```bash
+dnf clean all
+dnf install leapp-upgrade-el8toel9
+```
+
+## 8. Issue: DistributionNotFound Error ("leapp==1.0.0" not found)
+
+### Problem
+Leapp reports:
+
+> "DistributionNotFound: The 'leapp==1.0.0' distribution was not found..."
+
+This indicates that an expected version of Leapp is missing or that old Python site-packages remain.
+
+### Commands and Solutions
+
+**Remove All Leapp-Related Packages**
+```bash
+rpm -qa | grep leapp
+dnf remove leapp-upgrade-el8toel9 leapp-deps-el9 leapp-repository-deps-el9 python3-leapp
+```
+
+**Clean Python Site-Packages (if needed)**
+```bash
+find /usr/lib/python3* /usr/local/lib/python3* -type d -name "leapp*"
+rm -rf /usr/lib/python3*/site-packages/leapp*
+rm -rf /usr/local/lib/python3*/site-packages/leapp*
+```
+
+**Clean DNF Cache**
+```bash
+dnf clean all
+```
+
+**Reinstall Leapp**
+```bash
+dnf install leapp-upgrade-el8toel9
+```
+
+**Test the Preupgrade**
+```bash
+leapp preupgrade --target 9.4
+```
+
+## 9. Post-Upgrade Checks
+
+After completing the upgrade (whether RHEL 7 → 8 or RHEL 8 → 9), perform the following verifications:
+
+**Verify OS Version and Kernel**
+```bash
+cat /etc/redhat-release
+uname -r
+```
+
+**Check Subscription Status**
+```bash
+subscription-manager list --installed
+```
+
+**Clean Up Old Packages**
+
+1. Identify and Remove Old Kernel/El7 Packages:
+```bash
+rpm -qa | grep '\.el7'
+yum remove <old_el7_packages> -y
+```
+
+2. Remove Weak Modules (if any):
+```bash
+[ -x /usr/sbin/weak-modules ] && /usr/sbin/weak-modules --remove-kernel <old_kernel_version>
+```
+
+3. Remove Old Kernels from Boot Loader (Optional):
+```bash
+/bin/kernel-install remove <old_kernel_version> /lib/modules/<old_kernel_version>/vmlinuz
+```
+
+**Update the Rescue Kernel**
+```bash
+rm /boot/vmlinuz-*rescue* /boot/initramfs-*rescue*
+/usr/lib/kernel/install.d/51-dracut-rescue.install add "$(uname -r)" /boot "/boot/vmlinuz-$(uname -r)"
+```
+
+**Verify SELinux Mode**
+```bash
+getenforce
+```
+If it's not "Enforcing", set it in /etc/selinux/config and reboot.
+
+**Check Critical Services and Logs**
+
+1. List running services:
+```bash
+systemctl list-units --type=service --state=running
+```
+
+2. View error logs:
+```bash
+journalctl -p 3 -xb
+```
+
+**Final Package Update**
+```bash
+dnf clean all
+dnf update -y
+```
+
+## Summary
+
+During the upgrade process, we encountered and resolved the following issues:
+
+1. **Kernel Driver pata_acpi**
+   - Removed via modprobe -r pata_acpi, blacklisted it, updated initramfs, and rebooted.
+
+2. **SSH Root Login Warning**
+   - Modified /etc/ssh/sshd_config to PermitRootLogin yes and restarted SSH if needed.
+
+3. **Malformed RPM Metadata**
+   - Identified problematic packages (e.g., gpg-pubkey with extra delimiters) and removed them using rpm -e.
+
+4. **SHA-1 Signed Packages**
+   - Detected SHA-1 signed packages (e.g., dscsys1, dsesame) and removed or planned to update them.
+
+5. **Read-Only Filesystem Error**
+   - Ensured /var/lib/leapp was mounted read-write, checked disk space, and restored SELinux contexts.
+
+6. **OverlayFS Issue**
+   - Set export LEAPP_OVL_IMG_FS_EXT4=1 to force overlay image creation as ext4.
+
+7. **Module Filtering Issue**
+   - Reset/disabled conflicting modules via dnf module reset/disable.
+
+8. **DistributionNotFound for Leapp**
+   - Removed old Leapp packages and cleaned Python site-packages, then reinstalled Leapp via DNF.
+
+9. **Post-Upgrade Validations**
+   - Verified OS version, kernel, subscription, cleaned old packages, updated rescue kernel, and ensured SELinux is enforcing.
  
 
