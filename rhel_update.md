@@ -1329,7 +1329,7 @@ During the upgrade process, we encountered and resolved the following issues:
 
 ---
 <div align="center">
-  <p><strong>Designed & Documented by Mert Ugral</strong></p>
+  <p><strong>Designed & Documented by Mertugral</strong></p>
   <p>© 2025 Mertugral. All rights reserved.</p>
   <p><a href="https://github.com/ertugralmert">GitHub</a> | <a href="https://linkedin.com/in/mertertugral">LinkedIn</a></p>
 </div>
