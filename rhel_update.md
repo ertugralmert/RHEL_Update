@@ -1,7 +1,9 @@
 
 # RHEL Major Version Upgrade Guide: 7 → 8 → 9
 
-This guide provides comprehensive instructions for upgrading Red Hat Enterprise Linux (RHEL) systems through major versions. The guide covers upgrading from RHEL 7 to RHEL 8, and then from RHEL 8 to RHEL 9, using the Leapp in-place upgrade utility.
+This guide provides comprehensive instructions for upgrading Red Hat Enterprise Linux (RHEL) systems through major versions. The guide covers upgrading from RHEL 7 to RHEL 8, and then from RHEL 8 to RHEL 9, using the Leapp in-place upgrade utility.  
+[Documentation_RHEL7_to_RHEL8](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/8/html-single/upgrading_from_rhel_7_to_rhel_8/index#idm140321908504688)  
+[Documentation_RHEL8_to_RHEL9](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html-single/upgrading_from_rhel_8_to_rhel_9/index#idm140617907380960)
 
 ## Table of Contents
 
